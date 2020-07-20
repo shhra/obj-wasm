@@ -1,0 +1,57 @@
+[package]
+name = "obj-wasm"
+version = "0.1.0"
+authors = ["shhra <071bct538@pcampus.edu.np>"]
+edition = "2018"
+
+[lib]
+name = "obj_wasm"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook", "web_sys"]
+web_sys = ["web-sys", "wasm-bindgen"]
+
+[dependencies]
+wasm-bindgen = {version = "0.2.63", optional = true, features = ["serde-serialize"] }
+console_error_panic_hook = { version = "0.1.6", optional = true }
+serde = { version = "1.0.80", features = ["derive"] }
+serde_derive = "^1.0.59"
+wee_alloc = { version = "0.4.5", optional = true }
+js-sys = "0.3.40"
+wasm-bindgen-futures = "0.4.13"
+wasm-streams = "0.1.0"
+futures = "^0.3.5"
+cgmath = "0.17.0"
+
+[dependencies.web-sys]
+version = "0.3.40"
+features = [
+  'console',
+  'Document',
+  'Event',
+  'EventTarget',
+  'Element',
+  'Headers',
+  'File',
+  'FileReader',
+  'HtmlElement',
+  'HtmlImageElement',
+  'HtmlInputElement',
+  'Node',
+  'Request',
+  'RequestInit',
+  'RequestMode',
+  'ReadableStream',
+  'Response',
+  'Window',
+ ]
+optional=true
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.13"
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"

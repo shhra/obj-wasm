@@ -1,0 +1,156 @@
+* Inbox
+** [2020-07-16 Thu 19:37] Material Parser
+:PROPERTIES:
+:CREATED:  [2020-07-16 Thu 19:37]
+:END:
+
+It has a pointer to the model.
+
+Takes in the model, and the string buffer.
+
+The file has the following parts
+- newmtl name > takes in name of the material.
+- Ka r g b > ambient reflectivity using rgb
+- Kd r g b > diffuse factor.
+- Ks r g b > specular factor.
+- Tf r g b > Transmisison Filter
+- illum (0-10) > describes the illumination model
+    0		Color on and Ambient off
+    1		Color on and Ambient on
+    2		Highlight on
+    3		Reflection on and Ray trace on
+    4		Transparency: Glass on
+            Reflection: Ray trace on
+    5		Reflection: Fresnel on and Ray trace on
+    6		Transparency: Refraction on
+            Reflection: Fresnel off and Ray trace on
+    7		Transparency: Refraction on
+            Reflection: Fresnel on and Ray trace on
+    8		Reflection on and Ray trace off
+    9		Transparency: Glass on
+            Reflection: Ray trace off
+    10		Casts shadows onto invisible surfaces
+- d factor > describes dissolve for current material. Factor 1.0 = opqaue
+- Ns expnonet > specular exponent. Focus of specular highlight.
+- Ni > refractive index
+- nump , reflection = get texutre
+
+  Loading texture is very hard. do it as extension.
+
+
+
+** [2020-07-16 Thu 17:09] About parser.
+:PROPERTIES:
+:CREATED:  [2020-07-16 Thu 17:09]
+:END:
+
+1. Working:
+   Takes in the buffer to load a file.
+
+2. ParseFile
+   - Read line from the file
+   - Parse line
+     - if v >  call get_vertex
+     - if vt > call get_texture
+     - if vn > call get_normals.
+     - if p, l, f > call get_face, with the type of primitive
+     - if # > skip
+     - if usemtl > getMaterialdesc, i.e. name
+     - if mtllib > getMateriallibrary, i.e. name
+     - if g > get_group_name
+     - if o > get_object_name
+     - default > skip
+
+3. get_vertex
+   geometric vertices.
+   there are of form:
+                v x y z w
+    where, x y z are coordinates and are floating, in some cases, it may also have
+    homogenous coordinate
+
+    To get the vertices, we will be using a function that can parse 3d vectors.
+    This function will take in the model.gv,
+            To do so simply push the read value into the model.gv vector.
+
+    In any case the vector has four form as above, we will have to parse using homegenouse coordinates.
+            To do so simply push the read value (x/w, y/w, z/w) into the model.gv vector.
+
+    Sometimes the color information may be present in the same line. That is when there are 6 coordinates. We will have to parse in the model vertices as well as colors.
+            To do so simply push the read value the values into model.gv, and
+            model.colors.
+
+4. get_normal,
+            vn i j k
+    here i,j, and k represents the normal vectors. This is responsible for shading.
+    We will pass this value into model.vn
+            To do so simply push the read value into the model.gv vector.
+
+5. get_texture
+            vt u v w
+    u is the value ofr the horizontal direction of texture,
+    v is value for vertical direction of the texture, In cases this doesn't existing. we can assign it to be 0.
+    w is the value for depth of the texture. It can be zero too.
+
+    It should write the data into the buffer.
+
+    In case there are two components, push x, y, z into the model.vt, with z being 0.
+
+    In case there are three components, push x, y, z into the model.vt,
+
+6. get_face
+        f v/vt/vn v/vt/vn
+    A face carries the references to the vertex.
+    In case of absence of texture // is used.
+    f 1/1/1 represents first vertex, first vt and first vn.
+
+    p v1 v2 v3 ....
+        represents the point.
+
+    l v1/vt1 v2/vt2 represnets line.
+
+    Creating face is a bit complicated and requires us to do different things.
+
+    If the data is point, add it to the point.
+
+    If the data is line, add it as the line.
+
+    In case there are no texture coordinates skip it.
+
+    Create a new face type.
+
+    push the respective index into the respective of the vertices into the face indices. Use 3*i to do so.
+
+    we push the indices in to the face.vertices, face.normals and face.textures.
+
+    for the current material in the model, we will push the material into the
+    face mateiral.
+
+    Once we have done that we will push the face into current mesh that is being processed.
+
+7. get material library
+   - read the material file information
+   - call the file parser on it.
+    
+8. get group name
+
+   Look up for the group in models, if exits.
+   If it doesn's create a new object for given groupName.
+   Assign the respective faces to in that gr
+
+9. get object name
+   Search for the object in the list.
+   If object is exists, point to the current object.
+   If object doesn't exists, create a new object.
+
+10. Create Object
+    assign the current model.cur_object to new object.
+    assign to model.cur_object.name to objName.
+    push the object to model.objects
+    createMesh for given objName.
+    get the material infomation from the current model.
+    pass the material information to other files.
+
+11. create mesh
+    create a new mesh for the given mesh.
+    push the mesh into the mesh list.
+    push the mesh into the current object.
