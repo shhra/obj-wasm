@@ -1,11 +1,11 @@
 [package]
-name = "obj-wasm"
+name = "obj_wasm"
 version = "0.1.0"
 authors = ["shhra <071bct538@pcampus.edu.np>"]
 edition = "2018"
 
 [lib]
-name = "obj_wasm"
+name = "obj"
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 

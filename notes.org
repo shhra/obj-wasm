@@ -37,8 +37,6 @@ The file has the following parts
 
   Loading texture is very hard. do it as extension.
 
-
-
 ** [2020-07-16 Thu 17:09] About parser.
 :PROPERTIES:
 :CREATED:  [2020-07-16 Thu 17:09]

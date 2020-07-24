@@ -1,10 +1,10 @@
 #![allow(unused)]
-mod utils;
-mod reader;
-mod data;
-mod parser;
-mod scene;
-mod mtlreader;
+pub mod utils;
+pub mod reader;
+pub mod data;
+pub mod parser;
+pub mod scene;
+pub mod mtlreader;
 
 use wasm_bindgen::prelude::*;
 use reader::ObjReader;
@@ -36,12 +36,7 @@ pub fn load_scene(data: &str) {
     let model = Model::new();
     let object = Object::new();
 
-    log!("{}", reader.scene);
-    log!("{:#?}", face);
-    log!("{:#?}", material);
-    log!("{:#?}", mesh);
-    log!("{:#?}", model);
-    log!("{:#?}", object);
+    log!("{:?}", reader.scene);
     log!("This should load the default object file");
 }
 

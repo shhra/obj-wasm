@@ -78,7 +78,6 @@ impl<'mat> MtlReader<'mat> {
         };
         material.borrow_mut().name = name.clone();
         *self.cur_material =  Rc::clone(material);
-        log!("Material -> {:?}", name);
         Ok(())
     }
 

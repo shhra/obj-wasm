@@ -33,7 +33,6 @@ impl Parser {
                 Some("#") | None => continue,
                 Some("mtllib") => {
                     let name: String = words.map(|x| " ".to_owned() + x).collect();
-                    log!("Material Name: {}", &name);
                     MtlReader::load(&mut model.matlib, mat_data);
                 },
                 Some("v") => {
@@ -54,7 +53,7 @@ impl Parser {
                     self.parse_face(words, &mut model);
                 },
                 Some("g") => {
-                    self.parse_group(words, &mut model)?;
+                    self.parse_group(&mut words, &mut model)?;
                 },
                 Some("o") => {
                     self.parse_obj(words, &mut model)?;
@@ -118,19 +117,19 @@ impl Parser {
         for each in words {
             for (idx, data) in each.split("/").enumerate() {
                 if !data.is_empty() {
-                    match usize::from_str(data) {
-                        Ok(x) => if x < 0 {
+                    match isize::from_str(data) {
+                        Ok(x) => if x < 0 as isize{
                             match idx {
-                                0 => face.vertices.push(x + model.gv.len() / 3),
-                                1 => face.textures.push(x + model.gv.len() / 2),
-                                2 => face.normals.push(x + model.gv.len() / 3),
+                                0 => face.vertices.push((x  + (model.gv.len() / 3) as isize) as usize),
+                                1 => face.textures.push((x + (model.vt.len() / 2) as isize) as usize),
+                                2 => face.normals.push((x  + (model.vn.len() / 3) as isize) as usize),
                                 _ => panic!("Error while parsing face")
                             }
                         } else {
                             match idx {
-                                0 => face.vertices.push(x - 1),
-                                1 => face.textures.push(x - 1),
-                                2 => face.normals.push(x - 1),
+                                0 => face.vertices.push(x as usize - 1),
+                                1 => face.textures.push(x as usize - 1),
+                                2 => face.normals.push(x as usize - 1),
                                 _ => panic!("Error while parsing face")
                             }
                         },
@@ -140,60 +139,64 @@ impl Parser {
            }
         }
 
-        if face.vertices.len() > 3 {
-            let mut temp = Vec::new();
-            let a = face.vertices[0];
-            let mut b = face.vertices[1];
-            for c in face.vertices.iter().skip(2) {
-                temp.push(a);
-                temp.push(b);
-                temp.push(*c);
-                b = *c;
-            }
-            face.vertices = temp;
-        }
-        if face.normals.len() > 3 {
-            let mut temp = Vec::new();
-            let a = face.normals[0];
-            let mut b = face.normals[1];
-            for c in face.normals.iter().skip(2) {
-                temp.push(a);
-                temp.push(b);
-                temp.push(*c);
-                b = *c;
-            }
-            face.normals = temp;
-        }
-        if face.textures.len() > 3 {
-            let mut temp = Vec::new();
-            let a = face.textures[0];
-            let mut b = face.textures[1];
-            for c in face.textures.iter().skip(2) {
-                temp.push(a);
-                temp.push(b);
-                temp.push(*c);
-                b = *c;
-            }
-            face.textures = temp;
-        }
+        // if face.vertices.len() > 3 {
+        //     let mut temp = Vec::new();
+        //     let a = face.vertices[0];
+        //     let mut b = face.vertices[1];
+        //     for c in face.vertices.iter().skip(2) {
+        //         temp.push(a);
+        //         temp.push(b);
+        //         temp.push(*c);
+        //         b = *c;
+        //     }
+        //     face.vertices = temp;
+        // }
+        // if face.normals.len() > 3 {
+        //     let mut temp = Vec::new();
+        //     let a = face.normals[0];
+        //     let mut b = face.normals[1];
+        //     for c in face.normals.iter().skip(2) {
+        //         temp.push(a);
+        //         temp.push(b);
+        //         temp.push(*c);
+        //         b = *c;
+        //     }
+        //     face.normals = temp;
+        // }
+        // if face.textures.len() > 3 {
+        //     let mut temp = Vec::new();
+        //     let a = face.textures[0];
+        //     let mut b = face.textures[1];
+        //     for c in face.textures.iter().skip(2) {
+        //         temp.push(a);
+        //         temp.push(b);
+        //         temp.push(*c);
+        //         b = *c;
+        //     }
+        //     face.textures = temp;
+        // }
 
         face.material = Rc::clone(&model.matlib.0);
         model.meshes[model.cur_mesh].faces.push(face);
         Ok(())
     }
 
-    fn parse_group(&self, words: SplitWhitespace, model: &mut Model) -> Result<(), JsValue>
+    fn parse_group(&self, words:&mut SplitWhitespace, model: &mut Model) -> Result<(), JsValue>
     {
-        for x in words {
-            if &model.grplib.0 == x {
-                return Ok(())
-            }
-            let group_face = match model.grplib.1.entry(x.to_string()) {
-                Entry::Occupied(o) => model.grplib.1.get(&x.to_string()).unwrap(),
-                Entry::Vacant(v) => v.insert(Vec::new()),
-            };
-            self.create_object(x, model);
-            model.grplib.0 = x.to_string();
+        match words.next() {
+            Some(x) => {
+                if &model.grplib.0 == x {
+                    return Ok(())
+                }
+                let group_face = match model.grplib.1.entry(x.to_string()) {
+                    Entry::Occupied(o) => model.grplib.1.get(&x.to_string()).unwrap(),
+                    Entry::Vacant(v) => v.insert(Vec::new()),
+                };
+                self.create_object(x, model);
+                model.grplib.0 = x.to_string();
+            },
+            None => return Err(JsValue::from_str("Can't parse groups."))
+
         }
         Ok(())
     }
@@ -203,8 +206,8 @@ impl Parser {
 
         let mut iter = model.objects.iter();
         let name: String = words.collect();
-        let obj_name = iter.position(|x| x.name == name );
-        match obj_name {
+        let obj_index = iter.position(|x| x.name == name );
+        match obj_index {
             Some(o) => model.cur_obj = o,
             None => self.create_object(&name, model)?,
         }
@@ -214,12 +217,13 @@ impl Parser {
 
     fn create_object(&self, name: &str, model: &mut Model) -> Result<(), JsValue> {
         let mut iter = model.objects.iter();
-        let obj_name = iter.position(|x| &x.name == name );
-        match obj_name {
+        let obj_index = iter.position(|x| &x.name == name );
+        match obj_index {
             Some(x) => model.cur_obj = x,
             None => {
                 let mut obj = Object::new();
                 obj.name = name.to_string();
+                model.cur_obj = model.objects.len();
                 model.objects.push(obj);
                 self.create_mesh(name, model);
             }
@@ -234,13 +238,13 @@ impl Parser {
         mesh.name = name.to_string();
         model.meshes.push(mesh);
         let index = model.meshes.len() - 1 as usize;
+        model.cur_mesh = index;
         model.objects[model.cur_obj].meshes.push(index);
         Ok(())
     }
 
     fn use_material(&self, word: SplitWhitespace, model: &mut Model) -> Result<(), JsValue> {
         let name:String = word.collect();
-        log!("Loading material: {}", name);
         let material = match model.matlib.1.entry(name.clone()) {
             Entry::Occupied(o) => model.matlib.1.get(&name).unwrap(),
             Entry::Vacant(v) => {
@@ -250,7 +254,6 @@ impl Parser {
             }
         };
         model.matlib.0 = material.clone();
-        log!("Loaded {:?}", model.matlib.0.borrow().name);
         Ok(())
 
     }

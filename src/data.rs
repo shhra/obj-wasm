@@ -145,14 +145,6 @@ impl Material {
     }
 }
 
-// impl Deref for Material {
-//     type Target = Material;
-//     fn deref(&self) -> &Material {
-//         &self
-//     }
-
-// }
-
 impl Mesh {
     pub fn new() -> Self {
         Mesh {
