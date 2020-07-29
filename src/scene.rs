@@ -10,7 +10,7 @@ pub struct Index {
 
 /// Defines the face and becomes an interface to access the face information.
 /// It holds the indices to access the faces present within the mesh.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SceneFace { // Is questionable? Do I need it?
     /// List of indices pointing to the vertices, normals and textures.
     pub indices: Vec<usize>,
@@ -26,7 +26,7 @@ impl SceneFace {
 }
 
 /// Store vertices, normals, textures, colors, and list of faces.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SceneMesh {
     /// Name of the
     pub name: String,
@@ -42,6 +42,8 @@ pub struct SceneMesh {
     pub material: Option<Index>,
     /// list of faces.
     pub faces: Vec<SceneFace>,
+    /// All face indices.
+    pub face_indices: Vec<usize>,
 }
 
 impl SceneMesh {
@@ -54,18 +56,14 @@ impl SceneMesh {
             colors: Vec::new(),
             material: None,
             faces: Vec::new(),
-
+            face_indices: Vec::new(),
         }
-    }
-
-    pub fn vertices(&self) -> &Vec<f32> {
-        &self.gv
     }
 }
 
 
 /// Stores the information about the node.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SceneNode {
     /// A reference to the parent node.
     pub parent: Option<Index>,
@@ -99,7 +97,7 @@ pub struct SceneGraph {
     /// List of meshes.
     pub meshes: Vec<SceneMesh>,
     /// List of material
-    pub material: Vec<Material>,
+    pub materials: Vec<Material>,
 }
 
 impl SceneGraph {
@@ -107,15 +105,19 @@ impl SceneGraph {
         SceneGraph {
             nodes: Vec::new(),
             meshes: Vec::new(),
-            material: Vec::new(),
+            materials: Vec::new(),
         }
     }
 
-    pub fn meshes(&self) -> &Vec<SceneMesh> {
-        &self.meshes
+    pub fn owned_nodes(&self) -> Vec<SceneNode> {
+        self.nodes.to_owned()
     }
 
-    pub fn material(&self) -> &Vec<Material> {
-        &self.material
+    pub fn owned_meshes(&self) -> Vec<SceneMesh> {
+        self.meshes.to_owned()
+    }
+
+    pub fn owned_materials(&self) -> Vec<Material> {
+        self.materials.to_owned()
     }
 }

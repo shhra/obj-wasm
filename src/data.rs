@@ -1,5 +1,4 @@
-/// Contains the data structure to handle different files.
-
+/// Contains data structures that holds the parsed information from the file.
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -16,6 +15,7 @@ pub enum FaceType {
 
 type IndexArray = Vec<usize>;
 
+/// Holds different information about the materials present within the scene.
 #[derive(Clone, Debug)]
 pub struct Material {
     /// material name
@@ -125,6 +125,7 @@ pub struct Model {
 }
 
 impl Material {
+    /// Create a new material for parsing
     pub fn new() -> Self {
         Material {
             name: String::new(),
@@ -146,6 +147,7 @@ impl Material {
 }
 
 impl Mesh {
+    /// Create a new mesh for parsing.
     pub fn new() -> Self {
         Mesh {
             name: String::new(),
@@ -159,6 +161,7 @@ impl Mesh {
 }
 
 impl Face {
+    /// Create a new face for parsing.
     pub fn new() -> Self
     {
         Face {
@@ -172,6 +175,7 @@ impl Face {
 }
 
 impl Object {
+    /// Create a object for parsing.
     pub fn new() -> Self {
         Object {
             name: String::new(),
@@ -183,6 +187,7 @@ impl Object {
 }
 
 impl Model {
+    /// Create a model for parsing.
     pub fn new() -> Self {
         Model {
             model_name: String::new(),

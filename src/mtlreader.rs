@@ -8,13 +8,14 @@ use std::rc::Rc;
 use std::str::{FromStr, SplitWhitespace};
 use wasm_bindgen::prelude::JsValue;
 
-/// This will read the material properties from the obj file.
+/// Structure to read the current active material and update the material library.
 pub struct MtlReader<'mat> {
     cur_material: &'mat mut Rc<RefCell<Material>>,
     material_info: &'mat mut HashMap<String, Rc<RefCell<Material>>>,
 }
 
 impl<'mat> MtlReader<'mat> {
+    /// Load the material reader from active material and material library using the model.
     pub fn load(
         material: &mut (Rc<RefCell<Material>>, HashMap<String, Rc<RefCell<Material>>>),
         data: &str,
@@ -27,6 +28,8 @@ impl<'mat> MtlReader<'mat> {
         Ok(())
     }
 
+    /// Parses .mtl file
+    /// TODO: Allow parsing textures strings.
     pub fn parse_mtl(&mut self, data: &str) -> Result<(), JsValue> {
         for line in data.lines() {
             let mut words = line[..].split_whitespace();
@@ -71,7 +74,8 @@ impl<'mat> MtlReader<'mat> {
         Ok(())
     }
 
-    pub fn add_material(&mut self, name: String) -> Result<(), JsValue> {
+    /// Adds the materials into the libary and sets it as active material.
+    fn add_material(&mut self, name: String) -> Result<(), JsValue> {
         let material = match self.material_info.entry(name.clone()) {
             Entry::Occupied(o) => self.material_info.get(&name).unwrap(),
             Entry::Vacant(v) => v.insert(Rc::new(RefCell::new(Material::new()))),
@@ -81,7 +85,8 @@ impl<'mat> MtlReader<'mat> {
         Ok(())
     }
 
-    pub fn parse_floats(&self, words: SplitWhitespace, vals: &mut [f32; 3])
+    /// Parses array of floats.
+    fn parse_floats(&self, words: SplitWhitespace, vals: &mut [f32; 3])
                         -> Result<(), JsValue> {
         let count = words.clone().count();
         if count == 1 {
@@ -104,7 +109,8 @@ impl<'mat> MtlReader<'mat> {
         Ok(())
     }
 
-    pub fn parse_single(&self, words: SplitWhitespace, vals: &mut f32)
+    /// Parse a single value information
+    fn parse_single(&self, words: SplitWhitespace, vals: &mut f32)
                         -> Result<(), JsValue>
     {
         for p in words {
@@ -115,4 +121,5 @@ impl<'mat> MtlReader<'mat> {
         }
         Ok(())
     }
+    //TODO: Create parsing of string information for textures.
 }

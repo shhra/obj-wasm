@@ -1,69 +1,36 @@
-<div align="center">
+# Obj-Wasm
 
-  <h1><code>wasm-pack-template</code></h1>
+This is a tiny library that loads obj files in the browser. The objective of this libary is to assists 
+loading of "obj" and "mtl" files through wasm. Since wasm doesn't support file operations, the libary
+relies on getting the data from javascript. Therefore it relies on the fetch operation provided by the 
+browser. Current features include:
 
-  <strong>A template for kick starting a Rust and WebAssembly project using <a href="https://github.com/rustwasm/wasm-pack">wasm-pack</a>.</strong>
+1. Parsing the "obj" and "mtl" files.
+2. Creating a basic tree from the ".obj" file.
 
-  <p>
-    <a href="https://travis-ci.org/rustwasm/wasm-pack-template"><img src="https://img.shields.io/travis/rustwasm/wasm-pack-template.svg?style=flat-square" alt="Build Status" /></a>
-  </p>
+The idea in this libary is dead simple and further features are on the hold. 
 
-  <h3>
-    <a href="https://rustwasm.github.io/docs/wasm-pack/tutorials/npm-browser-packages/index.html">Tutorial</a>
-    <span> | </span>
-    <a href="https://discordapp.com/channels/442252698964721669/443151097398296587">Chat</a>
-  </h3>
+  * **TODO**
+  
+    [ ] Load textures materials.
 
-  <sub>Built with 🦀🕸 by <a href="https://rustwasm.github.io/">The Rust and WebAssembly Working Group</a></sub>
-</div>
+    [ ] Support indexing to load the vertices.
 
-## About
+    [ ] Better support for error handling.
 
-[**📚 Read this template tutorial! 📚**][template-docs]
+This library is heavily inpsired by [Assimp](https://github.com/assimp/assimp) and [tobj]( https://github.com/Twinklebear/tobj ) 
 
-This template is designed for compiling Rust libraries into WebAssembly and
-publishing the resulting package to NPM.
 
-Be sure to check out [other `wasm-pack` tutorials online][tutorials] for other
-templates and usages of `wasm-pack`.
 
-[tutorials]: https://rustwasm.github.io/docs/wasm-pack/tutorials/index.html
-[template-docs]: https://rustwasm.github.io/docs/wasm-pack/tutorials/npm-browser-packages/index.html
+## How to use
 
-## 🚴 Usage
+```rust
 
-### 🐑 Use `cargo generate` to Clone this Template
+use obj::reader::*;
 
-[Learn more about `cargo generate` here.](https://github.com/ashleygwilliams/cargo-generate)
+let mut reader = ObjReader::new()?;
+reader.read(&self.scene_data, &self.mat_data);
 
 ```
-cargo generate --git https://github.com/rustwasm/wasm-pack-template.git --name my-project
-cd my-project
-```
 
-### 🛠️ Build with `wasm-pack build`
-
-```
-wasm-pack build
-```
-
-### 🔬 Test in Headless Browsers with `wasm-pack test`
-
-```
-wasm-pack test --headless --firefox
-```
-
-### 🎁 Publish to NPM with `wasm-pack publish`
-
-```
-wasm-pack publish
-```
-
-## 🔋 Batteries Included
-
-* [`wasm-bindgen`](https://github.com/rustwasm/wasm-bindgen) for communicating
-  between WebAssembly and JavaScript.
-* [`console_error_panic_hook`](https://github.com/rustwasm/console_error_panic_hook)
-  for logging panic messages to the developer console.
-* [`wee_alloc`](https://github.com/rustwasm/wee_alloc), an allocator optimized
-  for small code size.
+Reader will now have the a your scene graph. You can access different data from the scene graph.

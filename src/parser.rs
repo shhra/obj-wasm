@@ -1,7 +1,5 @@
 use std::cell::RefCell;
 use std::fmt::Error;
-/// This class will handle the parsing of scene.
-/// from a string
 use std::rc::Rc;
 use std::str::{FromStr, SplitWhitespace};
 use std::collections::HashMap;
@@ -12,11 +10,13 @@ use crate::data::*;
 use crate::log;
 use crate::mtlreader::MtlReader;
 
+/// Holds the model that is being parsed from the respective file.
 pub struct Parser {
     pub model: Rc<RefCell<Model>>,
 }
 
 impl Parser {
+    /// Initialize parser with the data fetched from js.
     pub fn parse(scene_data: &str, mat_data:&str) -> Result<Parser, JsValue> {
         let mut parser = Parser {
             model: Rc::new(RefCell::new(Model::new())),
@@ -25,6 +25,7 @@ impl Parser {
         Ok(parser)
     }
 
+    /// Read the data in into the model.
     fn read_data(&mut self, scene_data: &str, mat_data:&str) -> Result<(), JsValue> {
         let mut model = self.model.borrow_mut();
         for line in scene_data.lines() {
@@ -68,35 +69,49 @@ impl Parser {
         Ok(())
     }
 
+    /// Parse array of floats.
+    /// Usually used to parse vertex, colors, tex coords, and normals.
     fn parse_floats(&self, words: SplitWhitespace, vals: &mut Vec<f32>)
                         -> Result<(), JsValue> {
         let count = words.clone().count();
-        if count == 3 {
-            for p in words {
-                match FromStr::from_str(p) {
-                    Ok(x) => vals.push(x),
-                    Err(e) => return Err(JsValue::from_str("Fetch error")),
+        match count {
+            3 => {
+                for p in words {
+                    match FromStr::from_str(p) {
+                        Ok(x) => vals.push(x),
+                        Err(e) => return Err(JsValue::from_str("Fetch error")),
+                    }
                 }
-            }
-        } else if count == 4 {
-            let mut temp: Vec<f32> = Vec::new();
-            for p in words {
-                match FromStr::from_str(p) {
-                    Ok(x) => temp.push(x),
-                    Err(e) => return Err(JsValue::from_str("Fetch error")),
+            },
+
+            4 => {
+                let mut temp: Vec<f32> = Vec::new();
+                for p in words {
+                    match FromStr::from_str(p) {
+                        Ok(x) => temp.push(x),
+                        Err(e) => return Err(JsValue::from_str("Fetch error")),
+                    }
                 }
-            }
-            let w = temp[3];
-            vals.push(temp[0] / &w);
-            vals.push(temp[1] / &w);
-            vals.push(temp[2] / &w);
-        } else {
-            for p in words {
-                match FromStr::from_str(p) {
-                    Ok(x) => vals.push(x),
-                    Err(e) => return Err(JsValue::from_str("Fetch error")),
+                let w = temp[3];
+                vals.push(temp[0] / &w);
+                vals.push(temp[1] / &w);
+                vals.push(temp[2] / &w);
+            },
+
+            6 => {
+                log!("Not implemented")
+            },
+
+            2 => {
+                for p in words {
+                    match FromStr::from_str(p) {
+                        Ok(x) => vals.push(x),
+                        Err(e) => return Err(JsValue::from_str("Fetch error")),
+                    }
                 }
-            }
+            },
+
+            _ => {}
         }
         Ok(())
     }
@@ -110,6 +125,7 @@ impl Parser {
         Ok(())
     }
 
+    /// Parse face information from the object file.
     fn parse_face(&self, words: SplitWhitespace, model: &mut Model) -> Result<(), JsValue> {
         // Make it work for points and lines too!
         let mut face: Face = Face::new();
@@ -139,48 +155,50 @@ impl Parser {
            }
         }
 
-        // if face.vertices.len() > 3 {
-        //     let mut temp = Vec::new();
-        //     let a = face.vertices[0];
-        //     let mut b = face.vertices[1];
-        //     for c in face.vertices.iter().skip(2) {
-        //         temp.push(a);
-        //         temp.push(b);
-        //         temp.push(*c);
-        //         b = *c;
-        //     }
-        //     face.vertices = temp;
-        // }
-        // if face.normals.len() > 3 {
-        //     let mut temp = Vec::new();
-        //     let a = face.normals[0];
-        //     let mut b = face.normals[1];
-        //     for c in face.normals.iter().skip(2) {
-        //         temp.push(a);
-        //         temp.push(b);
-        //         temp.push(*c);
-        //         b = *c;
-        //     }
-        //     face.normals = temp;
-        // }
-        // if face.textures.len() > 3 {
-        //     let mut temp = Vec::new();
-        //     let a = face.textures[0];
-        //     let mut b = face.textures[1];
-        //     for c in face.textures.iter().skip(2) {
-        //         temp.push(a);
-        //         temp.push(b);
-        //         temp.push(*c);
-        //         b = *c;
-        //     }
-        //     face.textures = temp;
-        // }
+        // Triangulate the parsed face.
+        if face.vertices.len() > 3 {
+            let mut temp = Vec::new();
+            let a = face.vertices[0];
+            let mut b = face.vertices[1];
+            for c in face.vertices.iter().skip(2) {
+                temp.push(a);
+                temp.push(b);
+                temp.push(*c);
+                b = *c;
+            }
+            face.vertices = temp;
+        }
+        if face.normals.len() > 3 {
+            let mut temp = Vec::new();
+            let a = face.normals[0];
+            let mut b = face.normals[1];
+            for c in face.normals.iter().skip(2) {
+                temp.push(a);
+                temp.push(b);
+                temp.push(*c);
+                b = *c;
+            }
+            face.normals = temp;
+        }
+        if face.textures.len() > 3 {
+            let mut temp = Vec::new();
+            let a = face.textures[0];
+            let mut b = face.textures[1];
+            for c in face.textures.iter().skip(2) {
+                temp.push(a);
+                temp.push(b);
+                temp.push(*c);
+                b = *c;
+            }
+            face.textures = temp;
+        }
 
         face.material = Rc::clone(&model.matlib.0);
         model.meshes[model.cur_mesh].faces.push(face);
         Ok(())
     }
 
+    /// Parse groups from the .obj file.
     fn parse_group(&self, words:&mut SplitWhitespace, model: &mut Model) -> Result<(), JsValue>
     {
         match words.next() {
@@ -201,6 +219,7 @@ impl Parser {
         Ok(())
     }
 
+    /// Parse objects from the .obj file.
     fn parse_obj(&self, words: SplitWhitespace, model: &mut Model) -> Result<(), JsValue>
     {
 
@@ -215,6 +234,7 @@ impl Parser {
 
     }
 
+    /// A helper function to creating objects for parsing.
     fn create_object(&self, name: &str, model: &mut Model) -> Result<(), JsValue> {
         let mut iter = model.objects.iter();
         let obj_index = iter.position(|x| &x.name == name );
@@ -233,6 +253,7 @@ impl Parser {
         Ok(())
     }
 
+    /// A helper function to create mesh for parsing.
     fn create_mesh(&self, name: &str, model: &mut Model) -> Result<(), JsValue> {
         let mut mesh = Mesh::new();
         mesh.name = name.to_string();
@@ -243,6 +264,8 @@ impl Parser {
         Ok(())
     }
 
+    // TODO: Allow loading of default material when there is no information present about material
+    /// A helper function to create material for parsing.
     fn use_material(&self, word: SplitWhitespace, model: &mut Model) -> Result<(), JsValue> {
         let name:String = word.collect();
         let material = match model.matlib.1.entry(name.clone()) {
