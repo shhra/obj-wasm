@@ -1,11 +1,11 @@
 # Obj-Wasm
 
 This is a tiny library that loads obj files in the browser. The objective of this libary is to assists 
-loading of "obj" and "mtl" files through wasm. Since wasm doesn't support file operations, the libary
+loading of ".obj" and ".mtl" files through wasm. Since wasm doesn't support file operations, the libary
 relies on getting the data from javascript. Therefore it relies on the fetch operation provided by the 
 browser. Current features include:
 
-1. Parsing the "obj" and "mtl" files.
+1. Parsing the ".obj" and ".mtl" files.
 2. Creating a basic tree from the ".obj" file.
 
 The idea in this libary is dead simple and further features are on the hold. 
@@ -33,4 +33,4 @@ reader.read(&self.scene_data, &self.mat_data);
 
 ```
 
-Reader will now have the a your scene graph. You can access different data from the scene graph.
+Reader will now have the scene graph. You can access different data from the scene graph.
